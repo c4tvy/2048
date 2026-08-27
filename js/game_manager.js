@@ -36,26 +36,18 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
   this.bindContainerClick();
 
-  // 退出高级模式按钮（移动端兼容）
+  // 退出高级模式按钮
   var exitBtn = document.getElementById('exit-advanced-btn');
   if (exitBtn) {
-    exitBtn.addEventListener('pointerdown', function(e) {
-      e.preventDefault();
-      this.exitAdvancedMode();
-    }.bind(this));
     exitBtn.addEventListener('click', function(e) {
       e.preventDefault();
       this.exitAdvancedMode();
     }.bind(this));
   }
 
-  // 重置最高分按钮（移动端兼容）
+  // 重置最高分按钮
   var resetBestBtn = document.getElementById('reset-best-btn');
   if (resetBestBtn) {
-    resetBestBtn.addEventListener('pointerdown', function(e) {
-      e.preventDefault();
-      this.resetBestScore();
-    }.bind(this));
     resetBestBtn.addEventListener('click', function(e) {
       e.preventDefault();
       this.resetBestScore();
@@ -165,11 +157,10 @@ GameManager.prototype.serialize = function () {
   };
 };
 
-// ---------- 重置最高分（强制归零，同步当前分数） ----------
+// ---------- 重置最高分 ----------
 GameManager.prototype.resetBestScore = function() {
   this.storageManager.setBestScore(0, true);
   this.actuator.updateBestScore(0);
-  // 同时将当前分数归零，避免后续移动自动恢复最高分
   this.score = 0;
   this.actuator.updateScore(0);
   this.saveState();
@@ -322,7 +313,6 @@ GameManager.prototype.bindScoreEditing = function() {
         if (!isNaN(val) && val >= 0) {
           self.storageManager.setBestScore(val, true);
           self.actuator.updateBestScore(val);
-          // 同步当前分数，防止后续覆盖
           self.score = val;
           self.actuator.updateScore(val);
           self.saveState();
@@ -351,7 +341,6 @@ GameManager.prototype.bindScoreEditing = function() {
       if (!isNaN(val) && val >= 0) {
         self.storageManager.setBestScore(val, true);
         self.actuator.updateBestScore(val);
-        // 同步当前分数，防止后续覆盖
         self.score = val;
         self.actuator.updateScore(val);
         self.saveState();
@@ -703,13 +692,16 @@ GameManager.prototype.move = function (direction) {
   }
 };
 
-// ---------- 重启游戏 ----------
+// ---------- 重启游戏（强制重置，并清除消息） ----------
 GameManager.prototype.restart = function () {
+  // 清除存储
   this.storageManager.clearGameState();
 
+  // 清空棋盘 DOM
   var container = document.querySelector('.tile-container');
   if (container) container.innerHTML = '';
 
+  // 重置所有内部状态
   this.grid = new Grid(this.size);
   this.score = 0;
   this.over = false;
@@ -724,11 +716,20 @@ GameManager.prototype.restart = function () {
   this.cancelNoMoveTimer();
   if (this.advancedMode) this.exitAdvancedMode();
 
+  // 重置计时器并启动
   this.resetTimer();
   this.startTimer();
 
+  // 生成初始方块
   this.addStartTiles();
+
+  // 强制清除游戏结束/胜利蒙层
+  this.actuator.clearMessage();
+
+  // 更新界面（刷新棋盘和分数）
   this.actuate();
+
+  // 重新启动高级模式入口计时器
   this.startNoMoveTimer();
 };
 
@@ -866,10 +867,9 @@ GameManager.prototype.positionsEqual = function (first, second) {
   return first.x === second.x && first.y === second.y;
 };
 
-// ---------- 撤销 ----------
+// ---------- 撤销（允许在游戏结束后撤销） ----------
 GameManager.prototype.undo = function () {
   if (this.moveInProgress) return;
-  if (this.isGameTerminated()) return;
   if (this.history.length === 0) return;
 
   var previous = this.history.pop();
@@ -887,11 +887,8 @@ GameManager.prototype.undo = function () {
     self.actuator.updateScore(self.score);
     self.actuator.updateBestScore(self.storageManager.getBestScore());
 
-    if (self.isGameTerminated()) {
-      self.actuator.message(self.won);
-    } else {
-      self.actuator.clearMessage();
-    }
+    // 清除消息，防止残留
+    self.actuator.clearMessage();
 
     if (self.over) {
       self.storageManager.clearGameState();
