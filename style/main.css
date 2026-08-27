@@ -1,0 +1,564 @@
+@import url(fonts/clear-sans.css);
+
+/* ---------- 基础重置 ---------- */
+html {
+  background: transparent;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background: #faf8ef;
+  color: #776e65;
+  font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
+  font-size: 18px;
+}
+body {
+  margin: 80px 0;
+}
+
+/* ---------- CSS 变量 ---------- */
+:root {
+  --page-bg: #faf8ef;
+  --text-color: #776e65;
+  --link-color: #776e65;
+  --divider-color: #d8d4d0;
+  --panel-bg: #bbada0;
+  --panel-label-color: #eee4da;
+  --board-bg: #bbada0;
+  --grid-cell-bg: rgba(238, 228, 218, 0.35);
+  --button-bg: #8f7a66;
+  --button-text: #f9f6f2;
+  --tile-base-bg: #eee4da;
+  --tile-base-text: #776e65;
+}
+
+body.dark-mode {
+  --page-bg: #101216;
+  --text-color: #e6e0d9;
+  --link-color: #f2d7a1;
+  --divider-color: #3c4250;
+  --panel-bg: #3a404d;
+  --panel-label-color: #c6ccd8;
+  --board-bg: #2a2f3a;
+  --grid-cell-bg: rgba(255, 255, 255, 0.08);
+  --button-bg: #5d6b85;
+  --button-text: #f8f9fb;
+  --tile-base-bg: #4f5563;
+  --tile-base-text: #f8f9fb;
+}
+
+body {
+  background: var(--page-bg);
+  color: var(--text-color);
+}
+
+/* ---------- 头部 ---------- */
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+h1.title {
+  font-size: 80px;
+  font-weight: bold;
+  margin: 0;
+  display: block;
+}
+
+/* ---------- 分数容器 ---------- */
+.scores-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  text-align: right;
+}
+.score-container, .best-container {
+  position: relative;
+  display: inline-block;
+  background: var(--panel-bg);
+  padding: 15px 25px;
+  font-size: 25px;
+  height: 25px;
+  line-height: 47px;
+  font-weight: bold;
+  border-radius: 3px;
+  color: white;
+  margin-top: 8px;
+  text-align: center;
+}
+.score-container:after, .best-container:after {
+  position: absolute;
+  width: 100%;
+  top: 10px;
+  left: 0;
+  text-transform: uppercase;
+  font-size: 13px;
+  line-height: 13px;
+  text-align: center;
+  color: var(--panel-label-color);
+}
+.score-container .score-addition, .best-container .score-addition {
+  position: absolute;
+  right: 30px;
+  color: red;
+  font-size: 25px;
+  line-height: 25px;
+  font-weight: bold;
+  color: rgba(119, 110, 101, 0.9);
+  z-index: 100;
+  animation: move-up 600ms ease-in;
+  animation-fill-mode: both;
+}
+.score-container:after { content: "分数"; }
+.best-container:after { content: "最高分"; }
+
+@keyframes move-up {
+  0% { top: 25px; opacity: 1; }
+  100% { top: -50px; opacity: 0; }
+}
+
+/* ---------- 通用 ---------- */
+p {
+  margin-top: 0;
+  margin-bottom: 10px;
+  line-height: 1.65;
+}
+a {
+  color: var(--link-color);
+  font-weight: bold;
+  text-decoration: underline;
+  cursor: pointer;
+}
+strong.important { text-transform: uppercase; }
+hr {
+  border: none;
+  border-bottom: 1px solid var(--divider-color);
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+.container {
+  width: min(100%, 680px);
+  margin: 0 auto;
+}
+
+/* ---------- 游戏容器 ---------- */
+.game-container {
+  margin: 40px auto 0;
+  position: relative;
+  padding: 15px;
+  cursor: default;
+  -webkit-touch-callout: none;
+  -ms-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -ms-touch-action: none;
+  touch-action: none;
+  background: var(--board-bg);
+  border-radius: 6px;
+  width: 500px;
+  height: 500px;
+  box-sizing: border-box;
+}
+
+/* ---------- 游戏蒙层 ---------- */
+.game-container .game-message {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(238, 228, 218, 0.5);
+  z-index: 100;
+  text-align: center;
+  animation: fade-in 800ms ease 1200ms;
+  animation-fill-mode: both;
+}
+.game-container .game-message p {
+  font-size: 60px;
+  font-weight: bold;
+  height: 60px;
+  line-height: 60px;
+  margin-top: 222px;
+}
+.game-container .game-message .lower {
+  display: block;
+  margin-top: 59px;
+}
+.game-container .game-message a {
+  display: inline-block;
+  background: var(--button-bg);
+  border-radius: 3px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: var(--button-text);
+  height: 40px;
+  line-height: 42px;
+  margin-left: 9px;
+}
+.game-container .game-message a.keep-playing-button { display: none; }
+.game-container .game-message.game-won {
+  background: rgba(237, 194, 46, 0.5);
+  color: #f9f6f2;
+}
+.game-container .game-message.game-won a.keep-playing-button { display: inline-block; }
+.game-container .game-message.game-won,
+.game-container .game-message.game-over { display: block; }
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ---------- 网格 ---------- */
+.grid-container {
+  position: absolute;
+  z-index: 1;
+}
+.grid-row {
+  margin-bottom: 15px;
+}
+.grid-row:last-child { margin-bottom: 0; }
+.grid-row:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+.grid-cell {
+  width: 106.25px;
+  height: 106.25px;
+  margin-right: 15px;
+  float: left;
+  border-radius: 3px;
+  background: var(--grid-cell-bg);
+}
+.grid-cell:last-child { margin-right: 0; }
+
+/* ---------- 方块容器 ---------- */
+.tile-container {
+  position: absolute;
+  z-index: 2;
+}
+
+/* ---------- 方块样式 ---------- */
+.tile, .tile .tile-inner {
+  width: 107px;
+  height: 107px;
+  line-height: 107px;
+}
+.tile {
+  position: absolute;
+  transition: 130ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition-property: transform;
+  will-change: transform;
+}
+.tile .tile-inner {
+  border-radius: 3px;
+  background: var(--tile-base-bg);
+  color: var(--tile-base-text);
+  text-align: center;
+  font-weight: bold;
+  z-index: 10;
+  font-size: 55px;
+}
+
+/* 位置类（桌面） */
+.tile.tile-position-1-1 { transform: translate(0px, 0px); }
+.tile.tile-position-1-2 { transform: translate(0px, 121px); }
+.tile.tile-position-1-3 { transform: translate(0px, 242px); }
+.tile.tile-position-1-4 { transform: translate(0px, 363px); }
+.tile.tile-position-2-1 { transform: translate(121px, 0px); }
+.tile.tile-position-2-2 { transform: translate(121px, 121px); }
+.tile.tile-position-2-3 { transform: translate(121px, 242px); }
+.tile.tile-position-2-4 { transform: translate(121px, 363px); }
+.tile.tile-position-3-1 { transform: translate(242px, 0px); }
+.tile.tile-position-3-2 { transform: translate(242px, 121px); }
+.tile.tile-position-3-3 { transform: translate(242px, 242px); }
+.tile.tile-position-3-4 { transform: translate(242px, 363px); }
+.tile.tile-position-4-1 { transform: translate(363px, 0px); }
+.tile.tile-position-4-2 { transform: translate(363px, 121px); }
+.tile.tile-position-4-3 { transform: translate(363px, 242px); }
+.tile.tile-position-4-4 { transform: translate(363px, 363px); }
+
+/* 方块颜色 */
+.tile.tile-2 .tile-inner { background: #eee4da; box-shadow: 0 0 30px 10px rgba(243,215,116,0), inset 0 0 0 1px rgba(255,255,255,0); }
+.tile.tile-4 .tile-inner { background: #ede0c8; box-shadow: 0 0 30px 10px rgba(243,215,116,0), inset 0 0 0 1px rgba(255,255,255,0); }
+body.dark-mode .tile.tile-2 .tile-inner { background: #5a6170; color: #f8f9fb; }
+body.dark-mode .tile.tile-4 .tile-inner { background: #697285; color: #f8f9fb; }
+.tile.tile-8 .tile-inner { color: #f9f6f2; background: #f2b179; }
+.tile.tile-16 .tile-inner { color: #f9f6f2; background: #f59563; }
+.tile.tile-32 .tile-inner { color: #f9f6f2; background: #f67c5f; }
+.tile.tile-64 .tile-inner { color: #f9f6f2; background: #f65e3b; }
+.tile.tile-128 .tile-inner { color: #f9f6f2; background: #edcf72; box-shadow: 0 0 30px 10px rgba(243,215,116,0.2381), inset 0 0 0 1px rgba(255,255,255,0.14286); font-size: 45px; }
+.tile.tile-256 .tile-inner { color: #f9f6f2; background: #edcc61; box-shadow: 0 0 30px 10px rgba(243,215,116,0.31746), inset 0 0 0 1px rgba(255,255,255,0.19048); font-size: 45px; }
+.tile.tile-512 .tile-inner { color: #f9f6f2; background: #edc850; box-shadow: 0 0 30px 10px rgba(243,215,116,0.39683), inset 0 0 0 1px rgba(255,255,255,0.2381); font-size: 45px; }
+.tile.tile-1024 .tile-inner { color: #f9f6f2; background: #edc53f; box-shadow: 0 0 30px 10px rgba(243,215,116,0.47619), inset 0 0 0 1px rgba(255,255,255,0.28571); font-size: 35px; }
+.tile.tile-2048 .tile-inner { color: #f9f6f2; background: #edc22e; box-shadow: 0 0 30px 10px rgba(243,215,116,0.55556), inset 0 0 0 1px rgba(255,255,255,0.33333); font-size: 35px; }
+.tile.tile-super .tile-inner { color: #f9f6f2; background: #3c3a32; font-size: 30px; }
+
+/* 出现/合并动画 */
+@keyframes appear {
+  0% { opacity: 0; transform: scale(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.tile-new .tile-inner {
+  animation: appear 160ms ease-out 40ms;
+  animation-fill-mode: backwards;
+}
+
+@keyframes pop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.tile-merged .tile-inner {
+  z-index: 20;
+  animation: pop 180ms ease-out 40ms;
+  animation-fill-mode: backwards;
+}
+
+/* ---------- 上方控制栏 ---------- */
+.above-game {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.game-intro {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  line-height: 1.4;
+}
+.above-game-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+.timer-container {
+  flex: 0 0 auto;
+  font-size: 18px;   /* 缩小一点以适应更宽内容 */
+  font-weight: bold;
+  color: var(--text-color);
+  background: var(--panel-bg);
+  padding: 6px 14px;
+  border-radius: 4px;
+  line-height: 28px;
+  min-width: 80px;   /* 从 60px 改为 80px */
+  text-align: center;
+}
+#game-timer {
+  font-variant-numeric: tabular-nums;
+}
+.above-game-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.restart-button, .theme-toggle-button, .undo-button {
+  background: var(--button-bg);
+  border-radius: 3px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: var(--button-text);
+  height: 40px;
+  line-height: 42px;
+  display: block;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ---------- 高级模式控件 ---------- */
+.tile-controls {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  pointer-events: none;
+  z-index: 20;
+}
+.tile-controls button {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  cursor: pointer;
+  line-height: 18px;
+  text-align: center;
+}
+.tile-controls button:hover { background: rgba(0,0,0,0.9); }
+.tile-controls .tile-up   { background: rgba(50,50,200,0.8); }
+.tile-controls .tile-down { background: rgba(200,200,50,0.8); }
+.tile-controls .tile-del  { background: rgba(200,50,50,0.8); }
+.tile-controls .tile-gen  { background: rgba(50,200,50,0.8); }
+
+/* ---------- 撤销消失动画 ---------- */
+.tile-removing {
+  animation: tileRemove 200ms ease-out forwards;
+  pointer-events: none;
+}
+@keyframes tileRemove {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+/* ---------- 高级模式面板 ---------- */
+#advanced-controls {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--panel-bg);
+  border-radius: 6px;
+  color: var(--text-color);
+}
+#advanced-controls button {
+  background: var(--button-bg);
+  color: var(--button-text);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#advanced-controls button:hover { opacity: 0.85; }
+#advanced-controls input {
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+  padding: 5px;
+  font-size: 14px;
+  background: var(--page-bg);
+  color: var(--text-color);
+}
+#advanced-controls input:focus {
+  outline: none;
+  border-color: var(--button-bg);
+}
+#advanced-controls hr { margin: 15px 0; }
+
+/* ---------- 退出高级按钮美化 ---------- */
+#exit-advanced-btn {
+  font-family: "Clear Sans", sans-serif;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: background 0.2s;
+}
+#exit-advanced-btn:hover {
+  background: #c0392b;
+}
+
+/* ---------- 响应式 ---------- */
+@media screen and (max-width: 520px) {
+  html, body { font-size: 15px; }
+  body { margin: 20px 0; padding: 0 20px; }
+
+  h1.title { font-size: 27px; margin-top: 15px; }
+
+  .container { width: 280px; margin: 0 auto; }
+
+  .score-container, .best-container {
+    margin-top: 0;
+    padding: 15px 10px;
+    min-width: 40px;
+  }
+  .heading { margin-bottom: 10px; }
+  .scores-container { gap: 5px; }
+
+  .above-game {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .game-intro {
+    flex: 0 0 auto;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .above-game-right {
+    flex: 0 0 auto;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+  .timer-container {
+    flex: 0 0 auto;
+    font-size: 18px;
+    padding: 4px 10px;
+    min-width: 50px;
+  }
+  .above-game-controls {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+  .restart-button, .theme-toggle-button, .undo-button {
+    padding: 0 12px;
+    font-size: 14px;
+    height: 34px;
+    line-height: 34px;
+  }
+
+  .game-container {
+    margin-top: 17px;
+    padding: 10px;
+    width: 280px;
+    height: 280px;
+  }
+  .grid-row { margin-bottom: 10px; }
+  .grid-cell {
+    width: 57.5px;
+    height: 57.5px;
+    margin-right: 10px;
+  }
+  .grid-cell:last-child { margin-right: 0; }
+
+  .tile, .tile .tile-inner {
+    width: 58px;
+    height: 58px;
+    line-height: 58px;
+  }
+
+  .tile.tile-position-1-1 { transform: translate(0px, 0px); }
+  .tile.tile-position-1-2 { transform: translate(0px, 67px); }
+  .tile.tile-position-1-3 { transform: translate(0px, 135px); }
+  .tile.tile-position-1-4 { transform: translate(0px, 202px); }
+  .tile.tile-position-2-1 { transform: translate(67px, 0px); }
+  .tile.tile-position-2-2 { transform: translate(67px, 67px); }
+  .tile.tile-position-2-3 { transform: translate(67px, 135px); }
+  .tile.tile-position-2-4 { transform: translate(67px, 202px); }
+  .tile.tile-position-3-1 { transform: translate(135px, 0px); }
+  .tile.tile-position-3-2 { transform: translate(135px, 67px); }
+  .tile.tile-position-3-3 { transform: translate(135px, 135px); }
+  .tile.tile-position-3-4 { transform: translate(135px, 202px); }
+  .tile.tile-position-4-1 { transform: translate(202px, 0px); }
+  .tile.tile-position-4-2 { transform: translate(202px, 67px); }
+  .tile.tile-position-4-3 { transform: translate(202px, 135px); }
+  .tile.tile-position-4-4 { transform: translate(202px, 202px); }
+
+  .tile .tile-inner { font-size: 35px; }
+
+  .game-message p {
+    font-size: 30px !important;
+    height: 30px !important;
+    line-height: 30px !important;
+    margin-top: 90px !important;
+  }
+  .game-message .lower { margin-top: 30px !important; }
+
+  .tile-controls button {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    line-height: 16px;
+  }
+}
