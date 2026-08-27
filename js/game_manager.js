@@ -36,8 +36,31 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
   this.bindContainerClick();
 
+  // 退出高级模式按钮（移动端兼容）
   var exitBtn = document.getElementById('exit-advanced-btn');
-  if (exitBtn) exitBtn.addEventListener('click', this.exitAdvancedMode.bind(this));
+  if (exitBtn) {
+    exitBtn.addEventListener('pointerdown', function(e) {
+      e.preventDefault();
+      this.exitAdvancedMode();
+    }.bind(this));
+    exitBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      this.exitAdvancedMode();
+    }.bind(this));
+  }
+
+  // 重置最高分按钮（移动端兼容）
+  var resetBestBtn = document.getElementById('reset-best-btn');
+  if (resetBestBtn) {
+    resetBestBtn.addEventListener('pointerdown', function(e) {
+      e.preventDefault();
+      this.resetBestScore();
+    }.bind(this));
+    resetBestBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      this.resetBestScore();
+    }.bind(this));
+  }
 
   this.bindScoreEditing();
 
@@ -142,12 +165,23 @@ GameManager.prototype.serialize = function () {
   };
 };
 
+// ---------- 重置最高分（强制归零，同步当前分数） ----------
+GameManager.prototype.resetBestScore = function() {
+  this.storageManager.setBestScore(0, true);
+  this.actuator.updateBestScore(0);
+  // 同时将当前分数归零，避免后续移动自动恢复最高分
+  this.score = 0;
+  this.actuator.updateScore(0);
+  this.saveState();
+};
+
 // ---------- 高级模式 ----------
 GameManager.prototype.bindContainerClick = function() {
   if (!this.gameContainer) return;
   var self = this;
-  this.gameContainer.addEventListener('click', function(e) {
+  this.gameContainer.addEventListener('pointerdown', function(e) {
     if (self.waitingForSequence) {
+      e.preventDefault();
       self.handleSequenceClick(e);
     }
   });
@@ -187,8 +221,11 @@ GameManager.prototype.handleSequenceClick = function(e) {
   var cellHeight = gridCell.offsetHeight;
   var gap = 15;
 
-  var offsetX = e.clientX - gridRect.left;
-  var offsetY = e.clientY - gridRect.top;
+  var clientX = e.clientX !== undefined ? e.clientX : e.pageX;
+  var clientY = e.clientY !== undefined ? e.clientY : e.pageY;
+
+  var offsetX = clientX - gridRect.left;
+  var offsetY = clientY - gridRect.top;
   var col = Math.floor(offsetX / (cellWidth + gap));
   var row = Math.floor(offsetY / (cellHeight + gap));
 
@@ -218,10 +255,23 @@ GameManager.prototype.enterAdvancedMode = function() {
   if (panel) panel.style.display = 'block';
   var exitBtn = document.getElementById('exit-advanced-btn');
   if (exitBtn) exitBtn.style.display = 'block';
+  var gameContainer = document.querySelector('.game-container');
+  if (gameContainer) gameContainer.classList.add('advanced-mode');
   this.cancelNoMoveTimer();
   this.stopTimer();
-  var timerInput = document.getElementById('edit-timer');
-  if (timerInput) timerInput.value = this.elapsedSeconds;
+
+  var hoursInput = document.getElementById('edit-timer-hours');
+  var minsInput = document.getElementById('edit-timer-minutes');
+  var secsInput = document.getElementById('edit-timer-seconds');
+  if (hoursInput && minsInput && secsInput) {
+    var hours = Math.floor(this.elapsedSeconds / 3600);
+    var mins = Math.floor((this.elapsedSeconds % 3600) / 60);
+    var secs = this.elapsedSeconds % 60;
+    hoursInput.value = hours;
+    minsInput.value = mins;
+    secsInput.value = secs;
+  }
+
   this.actuateNoAnimation();
 };
 
@@ -232,6 +282,8 @@ GameManager.prototype.exitAdvancedMode = function() {
   if (panel) panel.style.display = 'none';
   var exitBtn = document.getElementById('exit-advanced-btn');
   if (exitBtn) exitBtn.style.display = 'none';
+  var gameContainer = document.querySelector('.game-container');
+  if (gameContainer) gameContainer.classList.remove('advanced-mode');
   this.removeAllControls();
   this.startNoMoveTimer();
   if (!this.isGameTerminated()) {
@@ -244,7 +296,7 @@ GameManager.prototype.exitAdvancedMode = function() {
 GameManager.prototype.bindScoreEditing = function() {
   var self = this;
   var scoreEl = document.getElementById('score-display');
-  var bestEl = document.getElementById('best-display');
+  var bestEl = document.getElementById('best-score-number');
 
   if (scoreEl) {
     scoreEl.addEventListener('dblclick', function() {
@@ -268,8 +320,12 @@ GameManager.prototype.bindScoreEditing = function() {
       if (newVal !== null) {
         var val = parseInt(newVal);
         if (!isNaN(val) && val >= 0) {
-          self.storageManager.setBestScore(val);
+          self.storageManager.setBestScore(val, true);
           self.actuator.updateBestScore(val);
+          // 同步当前分数，防止后续覆盖
+          self.score = val;
+          self.actuator.updateScore(val);
+          self.saveState();
         }
       }
     });
@@ -293,8 +349,12 @@ GameManager.prototype.bindScoreEditing = function() {
     bestBtn.onclick = function() {
       var val = parseInt(document.getElementById('edit-best').value);
       if (!isNaN(val) && val >= 0) {
-        self.storageManager.setBestScore(val);
+        self.storageManager.setBestScore(val, true);
         self.actuator.updateBestScore(val);
+        // 同步当前分数，防止后续覆盖
+        self.score = val;
+        self.actuator.updateScore(val);
+        self.saveState();
       }
     };
   }
@@ -326,9 +386,12 @@ GameManager.prototype.bindScoreEditing = function() {
   var timerBtn = document.getElementById('apply-timer-btn');
   if (timerBtn) {
     timerBtn.onclick = function() {
-      var val = parseInt(document.getElementById('edit-timer').value);
-      if (!isNaN(val) && val >= 0) {
-        self.setTimerSeconds(val);
+      var hours = parseInt(document.getElementById('edit-timer-hours').value) || 0;
+      var mins = parseInt(document.getElementById('edit-timer-minutes').value) || 0;
+      var secs = parseInt(document.getElementById('edit-timer-seconds').value) || 0;
+      var totalSeconds = hours * 3600 + mins * 60 + secs;
+      if (totalSeconds >= 0) {
+        self.setTimerSeconds(totalSeconds);
       }
     };
   }
@@ -340,46 +403,64 @@ GameManager.prototype.addTileControls = function() {
   this.removeAllControls();
 
   var cells = document.querySelectorAll('.grid-cell');
+  var isMobile = window.innerWidth < 520;
+
   cells.forEach(function(cell, index) {
     var row = Math.floor(index / 4);
     var col = index % 4;
     var tile = self.grid.cellContent({x: col, y: row});
 
+    var refEl = null;
+    var tileEl = null;
+    if (tile) {
+      tileEl = document.querySelector('.tile[data-x="' + col + '"][data-y="' + row + '"]');
+      if (tileEl) refEl = tileEl;
+    }
+    if (!refEl) refEl = cell;
+
+    var size = refEl.offsetWidth;
+    var btnSize = size * 0.125;
+    var gapSize = size * 0.0625;
+    var fontSize = Math.max(8, btnSize * 0.5);
+
     var controls = document.createElement('div');
     controls.className = 'tile-controls';
     controls.style.position = 'absolute';
-    controls.style.bottom = '2px';
-    controls.style.right = '2px';
+    controls.style.bottom = '4px';
+    controls.style.right = '4px';
     controls.style.zIndex = '20';
     controls.style.pointerEvents = 'none';
     controls.style.display = 'flex';
     controls.style.flexDirection = 'column';
-    controls.style.gap = '1px';
+    controls.style.gap = gapSize + 'px';
 
     var btnStyle = {
       pointerEvents: 'auto',
-      width: '18px',
-      height: '18px',
-      fontSize: '10px',
+      width: btnSize + 'px',
+      height: btnSize + 'px',
+      fontSize: fontSize + 'px',
       padding: '0',
       border: 'none',
-      borderRadius: '2px',
+      borderRadius: '4px',
       cursor: 'pointer',
-      lineHeight: '18px',
+      lineHeight: btnSize + 'px',
       textAlign: 'center',
-      color: '#fff'
+      color: '#fff',
+      touchAction: 'none',
+      userSelect: 'none',
+      boxSizing: 'border-box'
     };
 
     if (tile) {
-      var tileEl = document.querySelector('.tile[data-x="' + col + '"][data-y="' + row + '"]');
       if (!tileEl) return;
 
       var up = document.createElement('button');
       Object.assign(up.style, btnStyle);
       up.textContent = '▲';
       up.className = 'tile-up';
-      up.style.background = 'rgba(50,50,200,0.8)';
-      up.addEventListener('click', function(e) {
+      up.style.background = 'rgba(50,50,200,0.85)';
+      up.addEventListener('pointerdown', function(e) {
+        e.preventDefault();
         e.stopPropagation();
         self.changeTileValue(row, col, 1);
       });
@@ -388,8 +469,9 @@ GameManager.prototype.addTileControls = function() {
       Object.assign(down.style, btnStyle);
       down.textContent = '▼';
       down.className = 'tile-down';
-      down.style.background = 'rgba(200,200,50,0.8)';
-      down.addEventListener('click', function(e) {
+      down.style.background = 'rgba(200,200,50,0.85)';
+      down.addEventListener('pointerdown', function(e) {
+        e.preventDefault();
         e.stopPropagation();
         self.changeTileValue(row, col, -1);
       });
@@ -398,26 +480,16 @@ GameManager.prototype.addTileControls = function() {
       Object.assign(del.style, btnStyle);
       del.textContent = '×';
       del.className = 'tile-del';
-      del.style.background = 'rgba(200,50,50,0.8)';
-      del.addEventListener('click', function(e) {
+      del.style.background = 'rgba(200,50,50,0.85)';
+      del.addEventListener('pointerdown', function(e) {
+        e.preventDefault();
         e.stopPropagation();
         self.removeTileAt(row, col);
-      });
-
-      var gen = document.createElement('button');
-      Object.assign(gen.style, btnStyle);
-      gen.textContent = '+';
-      gen.className = 'tile-gen';
-      gen.style.background = 'rgba(50,200,50,0.8)';
-      gen.addEventListener('click', function(e) {
-        e.stopPropagation();
-        self.generateTileAt(row, col);
       });
 
       controls.appendChild(up);
       controls.appendChild(down);
       controls.appendChild(del);
-      controls.appendChild(gen);
 
       var inner = tileEl.querySelector('.tile-inner');
       if (inner) {
@@ -431,8 +503,9 @@ GameManager.prototype.addTileControls = function() {
       Object.assign(gen.style, btnStyle);
       gen.textContent = '+';
       gen.className = 'tile-gen';
-      gen.style.background = 'rgba(50,200,50,0.8)';
-      gen.addEventListener('click', function(e) {
+      gen.style.background = 'rgba(50,200,50,0.85)';
+      gen.addEventListener('pointerdown', function(e) {
+        e.preventDefault();
         e.stopPropagation();
         self.generateTileAt(row, col);
       });
@@ -504,7 +577,9 @@ GameManager.prototype.actuateNoAnimation = function () {
 
   if (this.advancedMode) {
     var self = this;
-    setTimeout(function() { self.addTileControls(); }, 20);
+    requestAnimationFrame(function() {
+      self.addTileControls();
+    });
   }
 };
 
@@ -825,7 +900,7 @@ GameManager.prototype.undo = function () {
     }
 
     if (self.advancedMode) {
-      setTimeout(function() { self.addTileControls(); }, 20);
+      requestAnimationFrame(function() { self.addTileControls(); });
     }
   });
 };

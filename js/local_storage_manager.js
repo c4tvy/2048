@@ -45,10 +45,15 @@ LocalStorageManager.prototype.getBestScore = function () {
   return isNaN(bestScore) || bestScore < 0 ? 0 : bestScore;
 };
 
-LocalStorageManager.prototype.setBestScore = function (score) {
+// 增加 force 参数，允许强制覆盖
+LocalStorageManager.prototype.setBestScore = function (score, force) {
   var nextScore = Math.max(0, parseInt(score, 10) || 0);
-  var currentBest = this.getBestScore();
-  this.storage.setItem(this.bestScoreKey, Math.max(currentBest, nextScore));
+  if (force) {
+    this.storage.setItem(this.bestScoreKey, String(nextScore));
+  } else {
+    var currentBest = this.getBestScore();
+    this.storage.setItem(this.bestScoreKey, Math.max(currentBest, nextScore));
+  }
 };
 
 // Game state getters/setters and clearing

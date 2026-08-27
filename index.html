@@ -14,7 +14,7 @@
 
   <meta name="HandheldFriendly" content="True">
   <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
   <div class="container">
@@ -22,7 +22,14 @@
       <h1 class="title">2048</h1>
       <div class="scores-container">
         <div class="score-container" id="score-display">0</div>
-        <div class="best-container" id="best-display">0</div>
+        <!-- 重构后的最高分容器 -->
+        <div class="best-container" id="best-display">
+          <div class="best-header">
+            <span class="best-label">最高分</span>
+            <button id="reset-best-btn" class="reset-best-btn">重置</button>
+          </div>
+          <div class="best-score" id="best-score-number">0</div>
+        </div>
       </div>
     </div>
 
@@ -30,7 +37,7 @@
       <p class="game-intro">合并数字，向 <strong>2048</strong> 前进！</p>
       <div class="above-game-right">
         <div class="timer-container">
-          <span id="game-timer">00:00</span>
+          <span id="game-timer">00:00:00</span>
         </div>
         <div class="above-game-controls">
           <a class="theme-toggle-button" role="button" aria-label="Toggle theme" aria-pressed="false">深色模式</a>
@@ -78,11 +85,11 @@
 
       <div class="tile-container"></div>
 
-      <!-- 退出高级模式按钮（竖排，棋盘右上角外侧） -->
+      <!-- 退出高级模式按钮 -->
       <button id="exit-advanced-btn" style="display:none; position:absolute; right:-70px; top:10px; writing-mode:vertical-rl; background:#e74c3c; color:#fff; border:none; border-radius:4px; padding:10px 5px; cursor:pointer; font-size:14px; z-index:50; line-height:1.2;">退出高级模式</button>
     </div>
 
-    <!-- 高级模式控制面板（不包含退出按钮） -->
+    <!-- 高级模式控制面板 -->
     <div id="advanced-controls" style="display:none; margin-top:20px; padding:15px; background:var(--panel-bg); border-radius:6px; color:var(--text-color);">
       <div style="font-size:14px; margin-bottom:12px;">
         <span>💡 双击分数或最高分直接编辑 · 点击方块右侧箭头增减数值 · ×删除 · ＋生成</span>
@@ -105,9 +112,13 @@
         <input type="number" id="tile-value" placeholder="新值" style="width:80px; padding:5px;">
         <button id="apply-tile-btn" style="background:#8f7a66; color:#fff; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; margin-top:5px;">设置</button>
       </div>
-      <div style="margin-bottom:15px;">
-        <label>计时器（秒）：</label>
-        <input type="number" id="edit-timer" value="0" style="width:80px; padding:5px; margin-left:10px;">
+      <div style="margin-bottom:15px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <label style="min-width:70px;">计时器：</label>
+        <input type="number" id="edit-timer-hours" placeholder="时" min="0" style="width:50px; padding:5px;">
+        <span>:</span>
+        <input type="number" id="edit-timer-minutes" placeholder="分" min="0" max="59" style="width:50px; padding:5px;">
+        <span>:</span>
+        <input type="number" id="edit-timer-seconds" placeholder="秒" min="0" max="59" style="width:50px; padding:5px;">
         <button id="apply-timer-btn" style="background:#8f7a66; color:#fff; border:none; padding:5px 12px; border-radius:4px; cursor:pointer;">设置</button>
       </div>
     </div>

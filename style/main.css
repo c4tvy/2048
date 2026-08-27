@@ -74,8 +74,10 @@ h1.title {
   justify-content: flex-end;
   gap: 8px;
   text-align: right;
+  align-items: center;
 }
-.score-container, .best-container {
+
+.score-container {
   position: relative;
   display: inline-block;
   background: var(--panel-bg);
@@ -89,7 +91,7 @@ h1.title {
   margin-top: 8px;
   text-align: center;
 }
-.score-container:after, .best-container:after {
+.score-container:after {
   position: absolute;
   width: 100%;
   top: 10px;
@@ -99,8 +101,9 @@ h1.title {
   line-height: 13px;
   text-align: center;
   color: var(--panel-label-color);
+  content: "分数";
 }
-.score-container .score-addition, .best-container .score-addition {
+.score-container .score-addition {
   position: absolute;
   right: 30px;
   color: red;
@@ -112,8 +115,57 @@ h1.title {
   animation: move-up 600ms ease-in;
   animation-fill-mode: both;
 }
-.score-container:after { content: "分数"; }
-.best-container:after { content: "最高分"; }
+
+/* 最高分容器 */
+.best-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-bg);
+  padding: 12px 18px;
+  border-radius: 3px;
+  color: white;
+  margin-top: 8px;
+  min-width: 90px;
+  min-height: 55px;
+  box-sizing: border-box;
+}
+.best-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+}
+.best-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--panel-label-color);
+  line-height: 13px;
+}
+.reset-best-btn {
+  background: var(--button-bg);
+  color: var(--button-text);
+  border: none;
+  border-radius: 3px;
+  padding: 0 8px;
+  height: 22px;
+  line-height: 22px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.reset-best-btn:hover {
+  opacity: 0.85;
+}
+.best-score {
+  font-size: 25px;
+  font-weight: bold;
+  line-height: 25px;
+  color: white;
+  margin-top: 2px;
+}
 
 @keyframes move-up {
   0% { top: 25px; opacity: 1; }
@@ -162,6 +214,12 @@ hr {
   width: 500px;
   height: 500px;
   box-sizing: border-box;
+}
+.game-container.advanced-mode {
+  transform: scale(0.85);
+  transform-origin: top center;
+  margin-bottom: -40px;
+  transition: transform 0.2s ease;
 }
 
 /* ---------- 游戏蒙层 ---------- */
@@ -264,6 +322,12 @@ hr {
   font-weight: bold;
   z-index: 10;
   font-size: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: normal;
 }
 
 /* 位置类（桌面） */
@@ -343,14 +407,14 @@ body.dark-mode .tile.tile-4 .tile-inner { background: #697285; color: #f8f9fb; }
 }
 .timer-container {
   flex: 0 0 auto;
-  font-size: 18px;   /* 缩小一点以适应更宽内容 */
+  font-size: 18px;
   font-weight: bold;
   color: var(--text-color);
   background: var(--panel-bg);
   padding: 6px 14px;
   border-radius: 4px;
   line-height: 28px;
-  min-width: 80px;   /* 从 60px 改为 80px */
+  min-width: 80px;
   text-align: center;
 }
 #game-timer {
@@ -378,33 +442,29 @@ body.dark-mode .tile.tile-4 .tile-inner { background: #697285; color: #f8f9fb; }
 /* ---------- 高级模式控件 ---------- */
 .tile-controls {
   position: absolute;
-  bottom: 2px;
-  right: 2px;
+  bottom: 4px;
+  right: 4px;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 4px;
   pointer-events: none;
   z-index: 20;
 }
 .tile-controls button {
   pointer-events: auto;
-  width: 18px;
-  height: 18px;
-  font-size: 10px;
-  padding: 0;
   border: none;
-  border-radius: 2px;
-  background: rgba(0,0,0,0.6);
-  color: #fff;
+  border-radius: 4px;
   cursor: pointer;
-  line-height: 18px;
-  text-align: center;
+  color: #fff;
+  touch-action: none;
+  user-select: none;
+  box-sizing: border-box;
+  font-weight: bold;
 }
-.tile-controls button:hover { background: rgba(0,0,0,0.9); }
-.tile-controls .tile-up   { background: rgba(50,50,200,0.8); }
-.tile-controls .tile-down { background: rgba(200,200,50,0.8); }
-.tile-controls .tile-del  { background: rgba(200,50,50,0.8); }
-.tile-controls .tile-gen  { background: rgba(50,200,50,0.8); }
+.tile-controls .tile-up   { background: rgba(50,50,200,0.85); }
+.tile-controls .tile-down { background: rgba(200,200,50,0.85); }
+.tile-controls .tile-del  { background: rgba(200,50,50,0.85); }
+.tile-controls .tile-gen  { background: rgba(50,200,50,0.85); }
 
 /* ---------- 撤销消失动画 ---------- */
 .tile-removing {
@@ -447,11 +507,15 @@ body.dark-mode .tile.tile-4 .tile-inner { background: #697285; color: #f8f9fb; }
 }
 #advanced-controls hr { margin: 15px 0; }
 
-/* ---------- 退出高级按钮美化 ---------- */
+/* ---------- 退出高级按钮 ---------- */
 #exit-advanced-btn {
   font-family: "Clear Sans", sans-serif;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   transition: background 0.2s;
+  touch-action: manipulation;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 5px;
 }
 #exit-advanced-btn:hover {
   background: #c0392b;
@@ -466,13 +530,65 @@ body.dark-mode .tile.tile-4 .tile-inner { background: #697285; color: #f8f9fb; }
 
   .container { width: 280px; margin: 0 auto; }
 
-  .score-container, .best-container {
-    margin-top: 0;
-    padding: 15px 10px;
-    min-width: 40px;
+  .scores-container {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
   }
+
+  /* 手机版分数与最高分容器 */
+  .score-container {
+    padding: 10px 15px;
+    font-size: 20px;
+    height: 20px;
+    line-height: 20px;
+    margin-top: 0;
+  }
+  .score-container:after {
+    font-size: 11px;
+    top: 6px;
+    line-height: 11px;
+  }
+  .score-container .score-addition {
+    font-size: 18px;
+    line-height: 18px;
+    right: 20px;
+  }
+
+  .best-container {
+    padding: 10px 15px;
+    margin-top: 0;
+    min-width: 80px;
+    min-height: 45px;
+  }
+  .best-header {
+    gap: 4px;
+  }
+  .best-label {
+    font-size: 11px;
+    line-height: 11px;
+  }
+  .reset-best-btn {
+    height: 18px;
+    line-height: 18px;
+    font-size: 10px;
+    padding: 0 6px;
+  }
+  .best-score {
+    font-size: 20px;
+    line-height: 20px;
+    margin-top: 2px;
+  }
+
+  /* 退出高级按钮移动端适配 */
+  #exit-advanced-btn {
+    min-height: 44px;
+    min-width: 44px;
+    font-size: 14px;
+    padding: 10px 5px;
+  }
+
   .heading { margin-bottom: 10px; }
-  .scores-container { gap: 5px; }
 
   .above-game {
     flex-direction: column;
@@ -492,7 +608,7 @@ body.dark-mode .tile.tile-4 .tile-inner { background: #697285; color: #f8f9fb; }
   }
   .timer-container {
     flex: 0 0 auto;
-    font-size: 18px;
+    font-size: 16px;
     padding: 4px 10px;
     min-width: 50px;
   }
@@ -555,10 +671,32 @@ body.dark-mode .tile.tile-4 .tile-inner { background: #697285; color: #f8f9fb; }
   }
   .game-message .lower { margin-top: 30px !important; }
 
-  .tile-controls button {
-    width: 16px;
-    height: 16px;
-    font-size: 9px;
-    line-height: 16px;
+  #advanced-controls {
+    padding: 10px;
+    margin-top: 10px;
+  }
+  #advanced-controls label {
+    font-size: 13px;
+    display: inline-block;
+    min-width: 60px;
+  }
+  #advanced-controls input {
+    width: 50px;
+    padding: 3px;
+    font-size: 12px;
+    margin-left: 4px;
+  }
+  #advanced-controls button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  #advanced-controls hr {
+    margin: 10px 0;
+  }
+  #advanced-controls div {
+    flex-wrap: wrap;
+  }
+  #advanced-controls div input {
+    width: 45px;
   }
 }
