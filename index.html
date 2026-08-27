@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>2048</title>
+
+  <link href="style/main.css" rel="stylesheet" type="text/css">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="meta/apple-touch-icon.png">
+  <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x1096.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x920.png"  media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+  <div class="container">
+    <div class="heading">
+      <h1 class="title">2048</h1>
+      <div class="scores-container">
+        <div class="score-container" id="score-display">0</div>
+        <div class="best-container" id="best-display">0</div>
+      </div>
+    </div>
+
+    <div class="above-game">
+      <p class="game-intro">合并数字，向 <strong>2048</strong> 前进！</p>
+      <div class="above-game-right">
+        <div class="timer-container">
+          <span id="game-timer">00:00</span>
+        </div>
+        <div class="above-game-controls">
+          <a class="theme-toggle-button" role="button" aria-label="Toggle theme" aria-pressed="false">深色模式</a>
+          <a class="undo-button">撤销</a>
+          <a class="restart-button">新游戏</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="game-container">
+      <div class="game-message">
+        <p></p>
+        <div class="lower">
+          <a class="keep-playing-button">继续</a>
+          <a class="retry-button">再试一次</a>
+        </div>
+      </div>
+
+      <div class="grid-container">
+        <div class="grid-row">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+        </div>
+      </div>
+
+      <div class="tile-container"></div>
+
+      <!-- 退出高级模式按钮（竖排，棋盘右上角外侧） -->
+      <button id="exit-advanced-btn" style="display:none; position:absolute; right:-70px; top:10px; writing-mode:vertical-rl; background:#e74c3c; color:#fff; border:none; border-radius:4px; padding:10px 5px; cursor:pointer; font-size:14px; z-index:50; line-height:1.2;">退出高级模式</button>
+    </div>
+
+    <!-- 高级模式控制面板（不包含退出按钮） -->
+    <div id="advanced-controls" style="display:none; margin-top:20px; padding:15px; background:var(--panel-bg); border-radius:6px; color:var(--text-color);">
+      <div style="font-size:14px; margin-bottom:12px;">
+        <span>💡 双击分数或最高分直接编辑 · 点击方块右侧箭头增减数值 · ×删除 · ＋生成</span>
+      </div>
+      <hr>
+      <div style="margin-bottom:15px;">
+        <label>当前分数：</label>
+        <input type="number" id="edit-score" style="width:100px; padding:5px; margin-left:10px;">
+        <button id="apply-score-btn" style="background:#8f7a66; color:#fff; border:none; padding:5px 12px; border-radius:4px; cursor:pointer;">修改</button>
+      </div>
+      <div style="margin-bottom:15px;">
+        <label>最高分数：</label>
+        <input type="number" id="edit-best" style="width:100px; padding:5px; margin-left:10px;">
+        <button id="apply-best-btn" style="background:#8f7a66; color:#fff; border:none; padding:5px 12px; border-radius:4px; cursor:pointer;">修改</button>
+      </div>
+      <div style="margin-bottom:15px;">
+        <label>修改方块（行列）：</label>
+        <input type="number" id="tile-row" placeholder="行(0-3)" style="width:60px; padding:5px;">
+        <input type="number" id="tile-col" placeholder="列(0-3)" style="width:60px; padding:5px;">
+        <input type="number" id="tile-value" placeholder="新值" style="width:80px; padding:5px;">
+        <button id="apply-tile-btn" style="background:#8f7a66; color:#fff; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; margin-top:5px;">设置</button>
+      </div>
+      <div style="margin-bottom:15px;">
+        <label>计时器（秒）：</label>
+        <input type="number" id="edit-timer" value="0" style="width:80px; padding:5px; margin-left:10px;">
+        <button id="apply-timer-btn" style="background:#8f7a66; color:#fff; border:none; padding:5px 12px; border-radius:4px; cursor:pointer;">设置</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/bind_polyfill.js"></script>
+  <script src="js/classlist_polyfill.js"></script>
+  <script src="js/animframe_polyfill.js"></script>
+  <script src="js/keyboard_input_manager.js"></script>
+  <script src="js/html_actuator.js"></script>
+  <script src="js/grid.js"></script>
+  <script src="js/tile.js"></script>
+  <script src="js/local_storage_manager.js"></script>
+  <script src="js/game_manager.js"></script>
+  <script src="js/application.js"></script>
+</body>
+</html>
